@@ -1,14 +1,18 @@
 import os
 import sys
 from utils.banner import show_banner
-from modules.nik import nik_menu  
+from modules.nik import nik_menu
+from modules.dox import dox_menu
+from modules.ip import ip_menu_wrapper  
 
 def main():
     while True:
         os.system('clear' if os.name == 'posix' else 'cls')
         show_banner()
         
-        print("\n[1] NIK")
+        print("\n[1] NIK Parser")
+        print("[2] Dox Tools")
+        print("[3] Lacak IP")           
         print("[0] Exit")
         
         try:
@@ -16,6 +20,10 @@ def main():
             
             if choice == '1':
                 nik_menu()
+            elif choice == '2':
+                dox_menu()
+            elif choice == '3':         
+                ip_menu_wrapper()
             elif choice == '0':
                 print("\n[!] Thanks for using DanzXploit!")
                 sys.exit(0)

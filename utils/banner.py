@@ -16,6 +16,6 @@ def show_banner():
                                                                     █████                                   
                                                                    ▒▒▒▒▒                                    
 """
-    text  = "\n" + " " * ((120 - 24) // 2) + "Osint NIK By DanzXploit\n"
+    text  = "\n" + " " * ((120 - 24) // 2) + "Tools By DanzXploit\n"
     line  = "══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════"
     print(Fore.RED + raw + text + line + Style.RESET_ALL)

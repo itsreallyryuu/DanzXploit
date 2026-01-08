@@ -765,6 +765,8 @@ def nik_menu():
         
         nik_input = input(f"{GREEN_GLOW}[>] NIK: ").strip()
         
+        os.system('cls' if os.name == 'nt' else 'clear')
+        
         if nik_input.lower() in ['x', 'exit', 'quit']:
             break
         
@@ -774,7 +776,8 @@ def nik_menu():
             input(f"\n{CYAN_GLOW}[*] Tekan Enter untuk melanjutkan...")
             continue
         
-        print(f"\n{CYAN_GLOW}[*] Memproses NIK: {nik_input}")
+        
+        print(f"\n{GREEN_GLOW}[*] Memproses NIK: {nik_input}")
         
         start_time = time.time()
         data = cek_nik_online(nik_input)
@@ -785,8 +788,6 @@ def nik_menu():
             print(f"\n{CYAN_GLOW}[*] Waktu proses: {end_time - start_time:.2f} detik")
         else:
             print(f"\n{RED_GLOW}[!] Data tidak ditemukan atau NIK tidak valid!")
-        
-        print(f"\n{RED_GLOW}{'█' * 70}")
         choice = input(f"{YELLOW_GLOW}[?] Cek NIK lain? (y/n): ").strip().lower()
         
         if choice != 'y':

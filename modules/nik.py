@@ -1,24 +1,23 @@
-import requests, json, time, random, urllib3, ssl, datetime, sys, os
+import requests, json, time, random, urllib3, ssl, datetime, sys, os, re
 from colorama import Fore, Style, init
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
-# from wilayah_mapping_complete import get_nama_wilayah, WILAYAH_MAPPING
-
 
 init(autoreset=True)
 urllib3.disable_warnings()
 
+# ========== WARNA ==========
 RED_GLOW = Fore.LIGHTRED_EX
 GREEN_GLOW = Fore.LIGHTGREEN_EX
 YELLOW_GLOW = Fore.LIGHTYELLOW_EX
 CYAN_GLOW = Fore.LIGHTCYAN_EX
 WHITE_GLOW = Fore.LIGHTWHITE_EX
 
+# ========== CONFIG API ==========
 DC_API_URL = "https://deskcollection.space/api/v1/kpu/cek"
 DC_API_KEY = "dc_9712ee4c40eadde0ca70f262400b163a3144460ce0d00e8e"
 RAPIDAPI_KEY = "9faaa2b50fmsh5b48ae01005e119p1ff81djsn05fe4be86bf4"
 RAPIDAPI_URL = "https://nik-parser.p.rapidapi.com/ektp"
-WILAYAH_API = "https://api.andriannus.site/api/daerah"
 KEMENDAGRI_API = "https://www.kemendagri.go.id/api/cekekode"
 
 USER_AGENTS = [
@@ -301,9 +300,10 @@ KECAMATAN_MAPPING = {
     "330901": "Boyolali", "330902": "Ampel", "330903": "Banyudono", "330904": "Cepogo", "330905": "Gladagsari", "330906": "Juwangi", "330907": "Karanggede", "330908": "Kemusu", "330909": "Klego", "330910": "Krasak", "330911": "Mojosongo", "330912": "Musuk", "330913": "Ngargomulyo", "330914": "Nogosari", "330915": "Sambi", "330916": "Sawit", "330917": "Selo", "330918": "Simo", "330919": "Songo", "330920": "Tamanan", "330921": "Tamansari", "330922": "Tegalrejo", "330923": "Temu", "330924": "Wates", "330925": "Wonosegoro", "330926": "Ampel", "330927": "Banyudono", "330928": "Cepogo", "330929": "Gladagsari", "330930": "Juwangi", "330931": "Karanggede", "330932": "Kemusu", "330933": "Klego", "330934": "Krasak", "330935": "Mojosongo", "330936": "Musuk", "330937": "Ngargomulyo", "330938": "Nogosari", "330939": "Sambi", "330940": "Sawit", "330941": "Selo", "330942": "Simo", "330943": "Songo", "330944": "Tamanan", "330945": "Tamansari", "330946": "Tegalrejo", "330947": "Temu", "330948": "Wates", "330949": "Wonosegoro", "330950": "Ampel",
     "331001": "Klaten", "331002": "Bayat", "331003": "Cawas", "331004": "Ceper", "331005": "Delanggu", "331006": "Jatinom", "331007": "Jogonalan", "331008": "Juwaneng", "331009": "Karangdowo", "331010": "Karangnongko", "331011": "Kebonarum", "331012": "Kemalang", "331013": "Manisrenggo", "331014": "Ngawen", "331015": "Pedan", "331016": "Polanharjo", "331017": "Prambanan", "331018": "Purwodadi", "331019": "Trucuk", "331020": "Tulung", "331021": "Wedi", "331022": "Winong", "331023": "Wonosari", "331024": "Bayat", "331025": "Cawas", "331026": "Ceper", "331027": "Delanggu", "331028": "Jatinom", "331029": "Jogonalan", "331030": "Juwaneng", "331031": "Karangdowo", "331032": "Karangnongko", "331033": "Kebonarum", "331034": "Kemalang", "331035": "Manisrenggo", "331036": "Ngawen", "331037": "Pedan", "331038": "Polanharjo", "331039": "Prambanan", "331040": "Purwodadi", "331041": "Trucuk", "331042": "Tulung", "331043": "Wedi", "331044": "Winong", "331045": "Wonosari", "331046": "Bayat", "331047": "Cawas", "331048": "Ceper", "331049": "Delanggu", "331050": "Jatinom",
     "331051": "Jogonalan", "331052": "Juwaneng", "331053": "Karangdowo", "331054": "Karangnongko", "331055": "Kebonarum", "331056": "Kemalang", "331057": "Manisrenggo", "331058": "Ngawen", "331059": "Pedan", "331060": "Polanharjo", "331061": "Prambanan", "331062": "Purwodadi", "331063": "Trucuk", "331064": "Tulung", "331065": "Wedi", "331066": "Winong", "331067": "Wonosari", "331068": "Bayat", "331069": "Cawas", "331070": "Ceper", "331071": "Delanggu", "331072": "Jatinom", "331073": "Jogonalan", "331074": "Juwaneng", "331075": "Karangdowo", "331076": "Karangnongko", "331077": "Kebonarum", "331078": "Kemalang", "331079": "Manisrenggo", "331080": "Ngawen", "331081": "Pedan", "331082": "Polanharjo", "331083": "Prambanan", "331084": "Purwodadi", "331085": "Trucuk", "331086": "Tulung", "331087": "Wedi", "331088": "Winong", "331089": "Wonosari", "331090": "Bayat", "331091": "Cawas", "331092": "Ceper", "331093": "Delanggu", "331094": "Jatinom", "331095": "Jogonalan", "331096": "Juwaneng", "331097": "Karangdowo", "331098": "Karangnongko", "331099": "Kebonarum", "331100": "Kemalang", "331101": "Manisrenggo", "331102": "Ngawen", "331103": "Pedan", "331104": "Polanharjo", "331105": "Prambanan", "331106": "Purwodadi", "331107": "Trucuk", "331108": "Tulung", "331109": "Wedi", "331110": "Winong", "331111": "Wonosari", "331112": "Bayat", "331113": "Cawas", "331114": "Ceper", "331115": "Delanggu", "331116": "Jatinom", "331117": "Jogonalan", "331118": "Juwaneng", "331119": "Karangdowo", "331120": "Karangnongko", "331121": "Kebonarum", "331122": "Kemalang", "331123": "Manisrenggo", "331124": "Ngawen", "331125": "Pedan", "331126": "Polanharjo", "331127": "Prambanan", "331128": "Purwodadi", "331129": "Trucuk", "331130": "Tulung", "331131": "Wedi", "331132": "Winong", "331133": "Wonosari", "331134": "Bayat", "331135": "Cawas", "331136": "Ceper", "331137": "Delanggu", "331138": "Jatinom", "331139": "Jogonalan", "331140": "Juwaneng", "331141": "Karangdowo", "331142": "Karangnongko", "331143": "Kebonarum", "331144": "Kemalang", "331145": "Manisrenggo", "331146": "Ngawen", "331147": "Pedan", "331148": "Polanharjo", "331149": "Prambanan", "331150": "Purwodadi",
-    "331151": "Trucuk", "331152": "Tulung", "331153": "Wedi", "331154": "Winong", "331155": "Wonosari", "331156": "Bayat", "331157": "Cawas", "331158": "Ceper", "331159": "Delanggu", "331160": "Jatinom", "331161": "Jogonalan", "331162": "Juwaneng", "331163": "Karangdowo", "331164": "Karangnongko", "331165": "Kebonarum", "331166": "Kemalang", "331167": "Manisrenggo", "331168": "Ngawen", "331169": "Pedan", "331170": "Polanharjo", "331171": "Prambanan", "331172": "Purwodadi", "331173": "Trucuk", "331174": "Tulung", "331175": "Wedi", "331176": "Winong", "331177": "Wonosari", "331178": "Bayat", "331179": "Cawas", "331180": "Ceper", "331181": "Delanggu", "331182": "Jatinom", "331183": "Jogonalan", "331184": "Juwaneng", "331185": "Karangdowo", "331186": "Karangnongko", "331187": "Kebonarum", "331188": "Kemalang", "331189": "Manisrenggo", "331190": "Ngawen", "331191": "Pedan", "351516": "Gedangan"}
+    "331151": "Trucuk", "331152": "Tulung", "331153": "Wedi", "331154": "Winong", "331155": "Wonosari", "331156": "Bayat", "331157": "Cawas", "331158": "Ceper", "331159": "Delanggu", "331160": "Jatinom", "331161": "Jogonalan", "331162": "Juwaneng", "331163": "Karangdowo", "331164": "Karangnongko", "331165": "Kebonarum", "331166": "Kemalang", "331167": "Manisrenggo", "331168": "Ngawen", "331169": "Pedan", "331170": "Polanharjo", "331171": "Prambanan", "331172": "Purwodadi", "331173": "Trucuk", "331174": "Tulung", "331175": "Wedi", "331176": "Winong", "331177": "Wonosari", "331178": "Bayat", "331179": "Cawas", "331180": "Ceper", "331181": "Delanggu", "331182": "Jatinom", "331183": "Jogonalan", "331184": "Juwaneng", "331185": "Karangdowo", "331186": "Karangnongko", "331187": "Kebonarum", "331188": "Kemalang", "331189": "Manisrenggo", "331190": "Ngawen", "331191": "Pedan", "351516": "Gedangan", "340102": "Wates"}
 
 
+# ========== CLASS SSL ==========
 class SSLAdapter(requests.adapters.HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
         ctx = ssl.create_default_context()
@@ -311,6 +311,10 @@ class SSLAdapter(requests.adapters.HTTPAdapter):
         ctx.verify_mode = ssl.CERT_NONE
         kwargs["ssl_context"] = ctx
         return super().init_poolmanager(*args, **kwargs)
+
+# ========== FUNGSI UTILITAS ==========
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def make_api_request(url, method="GET", headers=None, data=None, params=None, timeout=15):
     """Fungsi umum untuk melakukan request API"""
@@ -348,7 +352,22 @@ def make_api_request(url, method="GET", headers=None, data=None, params=None, ti
     except Exception as e:
         print(f"{YELLOW_GLOW}[!] Error API: {str(e)}")
         return None
-    
+
+# ========== FUNGSI PARSING & WILAYAH ==========
+def get_nama_wilayah(kode_wilayah):
+    """Mendapatkan nama wilayah berdasarkan kode"""
+    if len(kode_wilayah) == 2:  # Provinsi
+        return WILAYAH_MAPPING.get(kode_wilayah, {}).get('nama', f'PROVINSI KODE {kode_wilayah}')
+    elif len(kode_wilayah) == 4:  # Kab/Kot
+        for prov_data in WILAYAH_MAPPING.values():
+            if kode_wilayah in prov_data['kabupaten_kota']:
+                return prov_data['kabupaten_kota'][kode_wilayah]
+        return f'KAB/KOT KODE {kode_wilayah}'
+    elif len(kode_wilayah) == 6:  # Kecamatan
+        return KECAMATAN_MAPPING.get(kode_wilayah, f'KECAMATAN KODE {kode_wilayah}')
+    else:
+        return f'KODE TIDAK VALID {kode_wilayah}'
+
 def parse_nik_structure(nik):
     """Parse struktur NIK tanpa data buatan"""
     if len(nik) != 16 or not nik.isdigit():
@@ -386,25 +405,131 @@ def parse_nik_structure(nik):
     except Exception as e:
         print(f"{RED_GLOW}[!] Error parsing NIK: {str(e)}")
         return None
-    
-def get_nama_wilayah(kode_wilayah):
-    """Mendapatkan nama wilayah berdasarkan kode"""
-    if len(kode_wilayah) == 2:  # Provinsi
-        return WILAYAH_MAPPING.get(kode_wilayah, {}).get('nama', f'PROVINSI KODE {kode_wilayah}')
-    elif len(kode_wilayah) == 4:  # Kab/Kot
-        for prov_data in WILAYAH_MAPPING.values():
-            if kode_wilayah in prov_data['kabupaten_kota']:
-                return prov_data['kabupaten_kota'][kode_wilayah]
-        return f'KAB/KOT KODE {kode_wilayah}'
-    elif len(kode_wilayah) == 6:  # Kecamatan
-        return KECAMATAN_MAPPING.get(kode_wilayah, f'KECAMATAN KODE {kode_wilayah}')
-    else:
-        return f'KODE TIDAK VALID {kode_wilayah}'
 
+def fetch_kemendagri(kode: str):
+    if len(kode) != 6 or not kode.isdigit():
+        return None
+    try:
+        r = requests.get(
+            KEMENDAGRI_API,
+            params={"kode": kode, "level": "kecamatan"},
+            headers={"User-Agent": random.choice(USER_AGENTS)},
+            timeout=6,
+            verify=False
+        )
+        if r.status_code == 200 and r.json().get("status") == "OK":
+            return r.json()["data"]
+    except Exception:
+        pass
+    return None
+
+def parse_wilayah_from_kode(kode_kecamatan: str):
+    """Return dict prov/kab/kec/kodepos; prioritas mapping lokal"""
+    if len(kode_kecamatan) != 6:
+        return {"provinsi": "Unknown", "kota": "Unknown",
+                "kecamatan": "Unknown", "kodepos": "00000"}
+
+    prov = get_nama_wilayah(kode_kecamatan[:2])   
+    kota = get_nama_wilayah(kode_kecamatan[:4])   
+    kec  = get_nama_wilayah(kode_kecamatan)    
+
+    if not kec.startswith("KECAMATAN KODE"):
+        return {"provinsi": prov, "kota": kota,
+                "kecamatan": kec, "kodepos": "00000"}
+
+    api_data = fetch_kemendagri(kode_kecamatan)
+    if api_data:
+        return {"provinsi": api_data["nama_prov"],
+                "kota": api_data["nama_kab"],
+                "kecamatan": api_data["nama"],
+                "kodepos": "00000"}
+
+    return {"provinsi": prov,
+            "kota": kota,
+            "kecamatan": f"KECAMATAN KODE {kode_kecamatan}",
+            "kodepos": "00000"}
+    
+# ========== FUNGSI ZODIAK & PASARAN JAWA ==========
+def get_zodiak(tgl: int, bln: int) -> str:
+    if (bln == 1 and tgl >= 20) or (bln == 2 and tgl <= 18):
+        return "Aquarius"
+    elif (bln == 2 and tgl >= 19) or (bln == 3 and tgl <= 20):
+        return "Pisces"
+    elif (bln == 3 and tgl >= 21) or (bln == 4 and tgl <= 19):
+        return "Aries"
+    elif (bln == 4 and tgl >= 20) or (bln == 5 and tgl <= 20):
+        return "Taurus"
+    elif (bln == 5 and tgl >= 21) or (bln == 6 and tgl <= 20):
+        return "Gemini"
+    elif (bln == 6 and tgl >= 21) or (bln == 7 and tgl <= 22):
+        return "Cancer"
+    elif (bln == 7 and tgl >= 23) or (bln == 8 and tgl <= 22):
+        return "Leo"
+    elif (bln == 8 and tgl >= 23) or (bln == 9 and tgl <= 22):
+        return "Virgo"
+    elif (bln == 9 and tgl >= 23) or (bln == 10 and tgl <= 22):
+        return "Libra"
+    elif (bln == 10 and tgl >= 23) or (bln == 11 and tgl <= 21):
+        return "Scorpio"
+    elif (bln == 11 and tgl >= 22) or (bln == 12 and tgl <= 21):
+        return "Sagittarius"
+    else:  # 22 Des - 19 Jan
+        return "Capricorn"
+
+def get_pasaran_jawa(tgl, bln, thn):
+    # Hitung hari sejak 1 Januari 1900 = Senin Pon
+    ref = date(1900, 1, 1)
+    target = date(thn, bln, tgl)
+    delta = (target - ref).days
+    pasaran = ["Pon", "Wage", "Kliwon", "Legi", "Pahing"]
+    return pasaran[delta % 5]    
+
+# ========== FUNGSI USIA ==========
+def hitung_usia_pasaran(tgl, bln, thn):
+    try:
+        tgl_lahir = date(thn, bln, tgl)
+        hari_ini = date.today()
+        
+        delta = relativedelta(hari_ini, tgl_lahir)
+        
+        ultah_tahun_ini = tgl_lahir.replace(year=hari_ini.year)
+        if ultah_tahun_ini < hari_ini:
+            ultah_tahun_depan = tgl_lahir.replace(year=hari_ini.year + 1)
+            hari_menuju = (ultah_tahun_depan - hari_ini).days
+        else:
+            hari_menuju = (ultah_tahun_ini - hari_ini).days
+        
+        bulan_menuju = hari_menuju // 30
+        hari_sisa = hari_menuju % 30
+        
+        
+        hari_list = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+        
+        ref_date = date(2000, 1, 1)
+        
+        days_diff = (tgl_lahir - ref_date).days
+        hari_index = tgl_lahir.weekday()
+        
+        usia_str = f"{delta.years} Tahun {delta.months} Bulan {delta.days} Hari"
+        ultah_str = f"{bulan_menuju} Bulan {hari_sisa} Hari Lagi" if hari_menuju > 0 else "Hari Ini Ulang Tahun!"
+        pasaran_str = f"{hari_list[hari_index]}, {tgl_lahir.strftime('%d %B %Y')}"
+        zodiak = get_zodiak(tgl, bln)
+        pasaran_jawa = get_pasaran_jawa(tgl, bln, thn)
+
+        return {
+            "usia": usia_str,
+            "ultah": ultah_str,
+            "pasaran": pasaran_str,
+            "tgl_lahir": tgl_lahir,
+            "zodiak": zodiak,
+            "pasaran_jawa": pasaran_jawa
+        }
+        
+    except Exception as e:
+        print(f"{RED_GLOW}[!] Error: {str(e)}")
+        return None
 
 def get_data_from_dc_api(nik):
-    """Mengambil data NIK dari Desk Collection API"""
-    print(f"{CYAN_GLOW}[*] Mencoba Desk Collection API...")
     
     headers = {
         "Content-Type": "application/json",
@@ -426,8 +551,6 @@ def get_data_from_dc_api(nik):
     return None
 
 def get_data_from_rapidapi(nik):
-    """Mengambil data dari RapidAPI (backup)"""
-    print(f"{CYAN_GLOW}[*] Mencoba DanzXploit...")
     
     headers = {
         "X-RapidAPI-Key": RAPIDAPI_KEY,
@@ -445,96 +568,46 @@ def get_data_from_rapidapi(nik):
     
     return None
 
-def fetch_kemendagri(kode: str):
-    """Coba ambil nama kecamatan dari API Kemendagri (cadangan)"""
-    if len(kode) != 6 or not kode.isdigit():
-        return None
-    try:
-        r = requests.get(
-            KEMENDAGRI_API,
-            params={"kode": kode, "level": "kecamatan"},
-            headers={"User-Agent": random.choice(USER_AGENTS)},
-            timeout=6,
-            verify=False
-        )
-        if r.status_code == 200 and r.json().get("status") == "OK":
-            return r.json()["data"]
-    except Exception:
-        pass
-    return None
+def get_life_path(tgl: int, bln: int, thn: int) -> str:
+    raw = f"{tgl:02d}{bln:02d}{thn:04d}"
+
+    def sum_digits(s: str) -> int:
+        return sum(int(c) for c in s)
+
+    # Jumlah awal
+    total = sum_digits(raw)
+
+    # Cek master number di tahap awal
+    if total in (11, 22, 33):
+        master = total
+    else:
+        master = None
+        while total > 9:
+            total = sum_digits(str(total))
+
+    judul = {
+        1: "REBIRTH",
+        2: "THE HEART AWAKEN",
+        3: "THE VOICE RETURNS",
+        4: "THE BREAKTHROUGH",
+        5: "DESTINY ACCELERATION",
+        6: "THE HEART SHIFT",
+        7: "THE AWAKENING",
+        8: "THE POWER YEAR",
+        9: "THE COMPLETION",
+        11: "THE CALLING",
+        22: "THE MASTER BUILDER",
+        33: "THE MASTER TEACHER"
+    }
+
+    if master:
+        return f"Master Number {master} : {judul[master]}"
+    else:
+        return f"Life Path {total} : {judul[total]}"
 
 
-def parse_wilayah_from_kode(kode_kecamatan: str):
-    """Return dict prov/kab/kec/kodepos; prioritas mapping lokal"""
-    if len(kode_kecamatan) != 6:
-        return {"provinsi": "UNKNOWN", "kota": "UNKNOWN",
-                "kecamatan": "UNKNOWN", "kodepos": "00000"}
-
-    prov = get_nama_wilayah(kode_kecamatan[:2])   
-    kota = get_nama_wilayah(kode_kecamatan[:4])   
-    kec  = get_nama_wilayah(kode_kecamatan)    
-
-    if not kec.startswith("KECAMATAN KODE"):
-        return {"provinsi": prov, "kota": kota,
-                "kecamatan": kec, "kodepos": "00000"}
-
-    api_data = fetch_kemendagri(kode_kecamatan)
-    if api_data:
-        return {"provinsi": api_data["nama_prov"],
-                "kota": api_data["nama_kab"],
-                "kecamatan": api_data["nama"],
-                "kodepos": "00000"}
-
-    return {"provinsi": prov,
-            "kota": kota,
-            "kecamatan": f"KECAMATAN KODE {kode_kecamatan}",
-            "kodepos": "00000"}
-
-def hitung_usia_pasaran(tgl, bln, thn):
-    """Hitung usia dengan akurasi penuh"""
-    try:
-        tgl_lahir = date(thn, bln, tgl)
-        hari_ini = date.today()
-        
-        delta = relativedelta(hari_ini, tgl_lahir)
-        
-        ultah_tahun_ini = tgl_lahir.replace(year=hari_ini.year)
-        if ultah_tahun_ini < hari_ini:
-            ultah_tahun_depan = tgl_lahir.replace(year=hari_ini.year + 1)
-            hari_menuju = (ultah_tahun_depan - hari_ini).days
-        else:
-            hari_menuju = (ultah_tahun_ini - hari_ini).days
-        
-        bulan_menuju = hari_menuju // 30
-        hari_sisa = hari_menuju % 30
-        
-        
-        hari_list = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
-        
-        ref_date = date(2000, 1, 1)
-        # ref_pasaran = 2 
-        
-        days_diff = (tgl_lahir - ref_date).days
-        # pasaran_index = (ref_pasaran + days_diff) % 5
-        hari_index = tgl_lahir.weekday()
-        
-        usia_str = f"{delta.years} Tahun {delta.months} Bulan {delta.days} Hari"
-        ultah_str = f"{bulan_menuju} Bulan {hari_sisa} Hari Lagi" if hari_menuju > 0 else "HARI INI ULANG TAHUN!"
-        pasaran_str = f"{hari_list[hari_index]}, {tgl_lahir.strftime('%d %B %Y')}"
-        
-        return {
-            "usia": usia_str,
-            "ultah": ultah_str,
-            "pasaran": pasaran_str,
-            "tgl_lahir": tgl_lahir
-        }
-        
-    except Exception as e:
-        print(f"{RED_GLOW}[!] Error menghitung usia: {str(e)}")
-        return None
-
+# ========== MAIN FUNCTIONS ==========
 def cek_nik_online(nik):
-    print(f"{CYAN_GLOW}[*] Memproses NIK: {nik}")
     
     data = get_data_from_dc_api(nik)
     api_source = "deskcollection"
@@ -554,6 +627,8 @@ def cek_nik_online(nik):
         parsed["thn_lahir"]
     )
     
+    life_path = get_life_path(parsed["tgl_lahir"], parsed["bln_lahir"], parsed["thn_lahir"])
+    
     if not usia_data:
         print(f"{RED_GLOW}[!] Gagal menghitung usia!")
         return None
@@ -564,10 +639,12 @@ def cek_nik_online(nik):
     data_lengkap = {
         "nik": nik,
         "no_kartu": data.get("no_kartu", "N/A") if data else "N/A",
-        "nama": data.get("nama", "DATA DARI API TIDAK DITEMUKAN") if data else "DATA DARI API TIDAK DITEMUKAN",
+        "nama": data.get("nama") if data else "Not Found",
         "hub_kel": data.get("hubungan_keluarga", "N/A") if data else "N/A",
         "jenis_kelamin": parsed["jenis_kelamin"],
         "tanggal_lahir": tgl_lahir_iso,
+        "zodiak": usia_data["zodiak"],
+        "life_path": life_path,
         "lahir": tgl_lahir_str,
         
         "provinsi": parsed["wilayah"]["provinsi"],
@@ -577,6 +654,7 @@ def cek_nik_online(nik):
         "kodepos": parsed["wilayah"]["kodepos"],
         
         "pasaran": usia_data["pasaran"],
+        "pasaran_jawa": usia_data["pasaran_jawa"],
         "usia": usia_data["usia"],
         "ultah": usia_data["ultah"],
         
@@ -596,28 +674,25 @@ def cek_nik_online(nik):
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    if data:
-        print(f"{GREEN_GLOW}[+] Data berhasil diambil dari {api_source.upper()} API")
-    else:
-        print(f"{YELLOW_GLOW}[!] Hanya data struktur NIK yang tersedia")
-    
     return data_lengkap
 
+# ========== DISPLAY FUNCTIONS ==========
 def display_nik_data(data):
-    """Tampilkan data NIK"""
+    """Tampilkan data NIK versi NIK OSINT"""
     if not data:
         print(f"{RED_GLOW}[!] Tidak ada data untuk ditampilkan")
         return
     
-    print(f"\n{RED_GLOW}‣‣‣‣‣ DATA DITEMUKAN [DanzXploit] ‣‣‣‣‣")
+    print(f"\n{RED_GLOW}‣‣‣‣‣ Data Ditemukan ‣‣‣‣‣")
     
     fields_main = [
         ("NIK", data['nik']),
-        ("No Kartu", data['no_kartu']),
         ("Nama", data['nama']),
-        ("Hub Kel", data['hub_kel']),
+        ("Nama Ortu", data.get('nama_ortu', 'N/A')),
         ("Jenis Kelamin", data['jenis_kelamin']),
         ("Tanggal Lahir", data['tanggal_lahir']),
+        ("Zodiak", data['zodiak']),
+        ("Life Path", data['life_path']),
         ("No HP", data['no_hp']),
         ("Email", data['email']),
         ("Alamat", data['alamat']),
@@ -625,23 +700,6 @@ def display_nik_data(data):
     
     for label, value in fields_main:
         print(f"{RED_GLOW}‣ {label}: {WHITE_GLOW}{value}")
-    
-    print(f"\n{RED_GLOW}‣‣‣‣‣ DATA BPJS KESEHATAN ‣‣‣‣‣")
-    fields_bpjs = [
-        ("Perusahaan", data['perusahaan']),
-        ("Kode Perusahaan", data['kode_perusahaan']),
-        ("Kelas", data['kelas']),
-        ("Status", data['status']),
-        ("Segmen", data['segmen']),
-        ("PISA", data['pisa']),
-        ("TMT", data['tmt']),
-        ("PPK", data['ppk']),
-    ]
-    
-    for label, value in fields_bpjs:
-        print(f"{RED_GLOW}‣ {label}: {WHITE_GLOW}{value}")
-    
-    print(f"\n{RED_GLOW}‣‣‣‣‣ INFORMASI TAMBAHAN ‣‣‣‣‣")
     fields_extra = [
         ("Provinsi", data['provinsi']),
         ("Kota/Kab", data['kotakab']),
@@ -649,31 +707,65 @@ def display_nik_data(data):
         ("Kode Pos", data['kodepos']),
         ("Kode Unik", data['uniqcode']),
         ("Hari Pasaran", data['pasaran']),
+        ("Pasaran Jawa", data['pasaran_jawa']),
         ("Usia Saat Ini", data['usia']),
         ("Menuju Ulang Tahun", data['ultah']),
     ]
     
     for label, value in fields_extra:
         print(f"{RED_GLOW}‣ {label}: {WHITE_GLOW}{value}")
-    
-    print(f"\n{RED_GLOW}‣‣‣‣‣ METADATA ‣‣‣‣‣")
     print(f"{RED_GLOW}‣ Timestamp: {GREEN_GLOW}{data['timestamp']}")
 
+def display_dox_data(data):
+    """Tampilkan data NIK versi DOX"""
+    if not data:
+        print(f"{RED_GLOW}[!] Tidak ada data untuk ditampilkan")
+        return
+    
+    clear_screen()
+    print(f"\n{RED_GLOW}{'─' * 60}")
+    print(f"{RED_GLOW}{' ' * 20} HASIL DOX NIK")
+    print(f"{RED_GLOW}{'─' * 60}")
+    
+    garis = f"{CYAN_GLOW}│ {WHITE_GLOW}"
+    print(f"{garis}NIK          : {data['nik']}")
+    print(f"{garis}Nama         : {GREEN_GLOW}{data['nama']}{WHITE_GLOW}")
+    print(f"{garis}Jenis Kel.   : {data['jenis_kelamin']}")
+    print(f"{garis}Tgl Lahir    : {data['tanggal_lahir']}")
+    print(f"{garis}Life Path    : {data['life_path']}")
+    print(f"{garis}Usia         : {data['usia']}")
+    print(f"{garis}Ultah Berik. : {data['ultah']}")
+    print(f"{garis}Provinsi     : {data['provinsi']}")
+    print(f"{garis}Kota/Kab     : {data['kotakab']}")
+    print(f"{garis}Kecamatan    : {data['kecamatan']}")
+    print(f"{garis}Alamat       : {data['alamat']}")
+    print(f"{garis}No HP        : {data['no_hp']}")
+    print(f"{garis}Email        : {data['email']}")
+    print(f"{garis}Source       : {data['source']}")
+    print(f"{CYAN_GLOW}{'─' * 60}")
+
+def save_json(data):
+    """Simpan data ke file JSON"""
+    fn = f"dox_nik_{data['nik']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(fn, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    print(f"\n{GREEN_GLOW}[✓] Tersimpan → {fn}")
+
+# ========== MENU FUNCTIONS ==========
 def nik_menu():
-    """Menu utama program - INI YANG DIIMPORT"""
+    """Menu utama NIK OSINT"""
     while True:
-        os.system('cls' if os.name == 'nt' else 'clear')
+        clear_screen()
         print(f"\n{RED_GLOW}{'-' * 70}")
-        print(f"{RED_GLOW}{' ' * 20} NIK OSINT - DanzXploit")
+        print(f"{RED_GLOW}{' ' * 20} NIK Xscan - DanzXploit")
         print(f"{RED_GLOW}{'-' * 70}")
         
-        print(f"\n{YELLOW_GLOW}[?] Masukkan NIK atau 'x' untuk keluar")
+        print(f"\n{YELLOW_GLOW}[?] Masukkan NIK atau 'x' untuk kembali")
         print(f"{RED_GLOW}{'─' * 70}")
         
         nik_input = input(f"{GREEN_GLOW}[>] NIK: ").strip()
         
         if nik_input.lower() in ['x', 'exit', 'quit']:
-            print(f"\n{RED_GLOW}[*] Keluar dari program...")
             break
         
         if len(nik_input) != 16 or not nik_input.isdigit():
@@ -683,7 +775,6 @@ def nik_menu():
             continue
         
         print(f"\n{CYAN_GLOW}[*] Memproses NIK: {nik_input}")
-        print(f"{RED_GLOW}{'─' * 70}")
         
         start_time = time.time()
         data = cek_nik_online(nik_input)
@@ -702,6 +793,64 @@ def nik_menu():
             print(f"\n{RED_GLOW}[*] Terima kasih telah menggunakan DanzXploit")
             break
 
+def dox_menu():
+    """Menu DOX NIK"""
+    while True:
+        clear_screen()
+        print(f"\n{RED_GLOW}{'─' * 60}")
+        print(f"{RED_GLOW}{' ' * 20} DOX NIK - 100% REAL")
+        print(f"{RED_GLOW}{'─' * 60}")
+        
+        nik = input(f"\n{YELLOW_GLOW}[?] NIK (16 digit) / 0 = back : ").strip()
+        
+        if nik == "0":
+            break
+            
+        if len(nik) != 16 or not nik.isdigit():
+            print(f"{RED_GLOW}[!] NIK harus 16 digit angka!")
+            input(f"{YELLOW_GLOW}  Tekan Enter…")
+            continue
+            
+        data = cek_nik_online(nik)
+        
+        if not data:
+            print(f"{RED_GLOW}[!] NIK tidak valid / tidak ditemukan!")
+            input(f"{YELLOW_GLOW}  Tekan Enter…")
+            continue
+            
+        display_dox_data(data)
+        
+        if input(f"\n{YELLOW_GLOW}[?] Simpan JSON? (y/n): ").lower() == "y":
+            save_json(data)
+            
+        if input(f"\n{YELLOW_GLOW}[?] Lagi? (y/n): ").lower() != "y":
+            break
+
+def main_menu():
+    """Menu utama untuk memilih mode"""
+    while True:
+        clear_screen()
+        print(f"\n{RED_GLOW}{'=' * 70}")
+        print(f"{RED_GLOW}{' ' * 25} NIK TOOLS")
+        print(f"{RED_GLOW}{'=' * 70}")
+        print(f"\n{CYAN_GLOW}[1] NIK OSINT (Mode Detail)")
+        print(f"{CYAN_GLOW}[2] DOX NIK (Mode Sederhana)")
+        print(f"{CYAN_GLOW}[3] Keluar")
+        print(f"{RED_GLOW}{'─' * 70}")
+        
+        choice = input(f"{GREEN_GLOW}[>] Pilih: ").strip()
+        
+        if choice == "1":
+            nik_menu()
+        elif choice == "2":
+            dox_menu()
+        elif choice == "3":
+            print(f"\n{RED_GLOW}[*] Terima kasih!")
+            break
+        else:
+            print(f"{RED_GLOW}[!] Pilihan tidak valid!")
+
+# ========== BATCH PROCESS ==========
 def batch_process_nik(nik_list):
     """Proses multiple NIKs (untuk import dari main.py)"""
     results = []
@@ -720,8 +869,8 @@ def batch_process_nik(nik_list):
     
     return results
 
+# ========== MAIN ==========
 if __name__ == "__main__":
-    
     try:
         import requests, colorama, dateutil
         print(f"{GREEN_GLOW}[+] Semua dependency terpenuhi")
@@ -730,4 +879,4 @@ if __name__ == "__main__":
         exit(1)
     
     print(f"{CYAN_GLOW}[*] Memulai program...")
-    nik_menu()
+    main_menu()

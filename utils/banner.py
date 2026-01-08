@@ -16,6 +16,7 @@ def show_banner():
                                                                     █████                                   
                                                                    ▒▒▒▒▒                                    
 """
-    text  = "\n" + " " * ((120 - 24) // 2) + "Tools By DanzXploit\n"
+    text = "\n" + " " * ((115 - 24) // 2) + "Tools By DanzXploit × WH01S\n"
+    dev  = " " * ((120 - 45) // 2) + "Developer : WH01S  |  Partner : DanzXploit\n"
     line  = "══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════"
-    print(Fore.RED + raw + text + line + Style.RESET_ALL)
+    print(Fore.RED + raw + text + dev + line + Style.RESET_ALL)
